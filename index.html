@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1b33">
+<title>Credit Recovery · Operations dashboard</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="#overview">
+      <span class="brand-mark" aria-hidden="true">↗</span>
+      <span class="brand-text">
+        <strong>credit <i>recovery</i></strong>
+        <small>RECOVERY OPERATIONS</small>
+      </span>
+    </a>
+
+    <p class="nav-title">Dashboards</p>
+    <nav class="nav" aria-label="Dashboards">
+      <button class="nav-item" data-page="overview"><span class="nav-ico" aria-hidden="true">▦</span>Overview</button>
+      <button class="nav-item" data-page="overdue"><span class="nav-ico" aria-hidden="true">▤</span>Daily Overdue Data</button>
+      <button class="nav-item" data-page="consolidate"><span class="nav-ico" aria-hidden="true">⇄</span>Daily Consolidate</button>
+      <button class="nav-item" data-page="npl"><span class="nav-ico" aria-hidden="true">↗</span>NPL Movement</button>
+      <button class="nav-item" data-page="monthly"><span class="nav-ico" aria-hidden="true">◷</span>Monthly Portfolio</button>
+    </nav>
+
+    <p class="nav-title">Operations</p>
+    <nav class="nav" aria-label="Operations">
+      <button class="nav-item" data-page="tasks"><span class="nav-ico" aria-hidden="true">☷</span>Recovery Tasks</button>
+      <button class="nav-item" data-page="internal"><span class="nav-ico" aria-hidden="true">▥</span>Internal Report</button>
+      <button class="nav-item" data-page="library"><span class="nav-ico" aria-hidden="true">▧</span>SOP &amp; Forms</button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="data-card">
+        <span class="data-dot" id="sideDot"></span>
+        <div>
+          <strong>Excel folders connected</strong>
+          <small id="sideStamp">Loading dashboard data…</small>
+        </div>
+      </div>
+      <div class="user-chip">
+        <span class="avatar">CR</span>
+        <span><strong>Credit Recovery</strong><small>Operations dashboard</small></span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger" aria-label="Open menu">☰</button>
+        <span class="crumb">Credit Recovery <b>/</b> <span id="crumb">Overview</span></span>
+      </div>
+      <div class="topbar-right">
+        <span class="live"><i></i>Auto refresh</span>
+        <span class="stamp" id="dataStamp">—</span>
+        <button class="icon-btn" id="refreshData" title="Reload data from Excel folders" aria-label="Reload data">⟳</button>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ================= OVERVIEW ================= -->
+      <section class="page" id="page-overview">
+        <header class="page-head">
+          <div>
+            <p class="overline">Credit recovery · portfolio snapshot</p>
+            <h1>Portfolio overview</h1>
+            <p class="page-sub" id="loanSub">Loading loan listing report…</p>
+          </div>
+          <div class="head-tools">
+            <label class="tool">Reporting date
+              <select id="loanDate"></select>
+            </label>
+            <label class="tool">Display currency
+              <select id="loanCurrency"><option value="KHR" selected>KHR</option><option value="USD">USD</option></select>
+            </label>
+            <label class="tool">Exchange rate
+              <span class="tool-inline"><input id="loanRate" type="number" min="1" step="1" value="4055"><em>KHR / USD</em></span>
+            </label>
+          </div>
+        </header>
+
+        <div class="filters">
+          <label>Stage<select id="fStage"></select></label>
+          <label>Sector (Risk Weight)<select id="fSector"></select></label>
+          <label>Credit By Sector<select id="fCredit"></select></label>
+          <label>Secured / Unsecured<select id="fSecured"></select></label>
+          <button class="btn ghost" id="loanReset">Reset filters</button>
+        </div>
+
+        <div class="kpi-grid" id="loanKpis"></div>
+
+        <div class="chart-grid">
+          <article class="panel">
+            <div class="panel-head"><div><h2>Stage</h2><p>Accounts, outstanding and share by IFRS stage</p></div><span class="tag" id="stageTag">—</span></div>
+            <div class="breakdown" id="stageMix"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Credit By Sector</h2><p>Outstanding split across credit sector groups</p></div><span class="tag" id="creditTag">—</span></div>
+            <div id="creditDonut" class="donut-wrap"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Sector (Risk Weight)</h2><p>Exposure by regulatory risk-weight sector</p></div><span class="tag" id="sectorTag">—</span></div>
+            <div class="breakdown" id="sectorRw"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Remaining Commitment (KHR)</h2><p>Undisbursed commitment by Credit By Sector</p></div><span class="tag" id="remainTag">—</span></div>
+            <div class="breakdown" id="remaining"></div>
+          </article>
+          <article class="panel span-2">
+            <div class="panel-head"><div><h2>Total Monthly (LCR)</h2><p id="monthlyNote">Total monthly payment by Credit By Sector</p></div><span class="tag" id="monthlyTag">—</span></div>
+            <div class="breakdown columns-2" id="monthly"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ================= DAILY OVERDUE ================= -->
+      <section class="page" id="page-overdue">
+        <header class="page-head">
+          <div>
+            <p class="overline">Daily overdue data · portfolio position</p>
+            <h1>Daily overdue data</h1>
+            <p class="page-sub" id="odSub">Loading overdue snapshots…</p>
+          </div>
+          <div class="head-tools">
+            <label class="tool">Reporting date
+              <select id="odDate"></select>
+            </label>
+            <label class="tool">Display currency
+              <select id="odCurrency"><option value="USD" selected>USD</option><option value="KHR">KHR</option></select>
+            </label>
+            <label class="tool">Exchange rate
+              <span class="tool-inline"><input id="odRate" type="number" min="1" step="1" value="4055"><em>KHR / USD</em></span>
+            </label>
+          </div>
+        </header>
+
+        <div class="control-bar">
+          <div class="segmented" id="odTypes" role="tablist" aria-label="Loan type"></div>
+          <label class="tool">Branch / Company
+            <select id="odBranch"><option value="All">All branches</option></select>
+          </label>
+        </div>
+
+        <div class="kpi-grid" id="odKpis"></div>
+
+        <div class="chart-grid">
+          <article class="panel span-2">
+            <div class="panel-head"><div><h2>Outstanding &amp; overdue trend</h2><p id="odTrendNote">Daily balance and account movement</p></div><span class="tag">Total</span></div>
+            <div class="chart" id="odTrend"></div>
+            <div class="legend" id="odTrendLegend"></div>
+          </article>
+          <article class="panel span-2">
+            <div class="panel-head"><div><h2>Overdue by Branch/Company</h2><p id="odBranchNote">Selected reporting date by branch</p></div><span class="tag" id="odBranchTag">Accounts · OS</span></div>
+            <div class="table-wrap">
+              <table class="data-table compact" id="odBranchTable">
+                <thead><tr><th>Branch / Company</th><th class="num">Count account</th><th class="num">Outstanding balance</th></tr></thead>
+                <tbody id="odBranchBody"></tbody>
+              </table>
+            </div>
+            <p class="note" id="odBranchFoot"></p>
+          </article>
+          <article class="panel span-2">
+            <div class="panel-head"><div><h2>Loan Classification</h2><p id="odClassNote">Selected reporting date</p></div><span class="tag" id="odClassTag">OS</span></div>
+            <div class="chart" id="odClass"></div>
+            <div class="legend" id="odClassLegend"></div>
+          </article>
+          <article class="panel span-2">
+            <div class="panel-head"><div><h2>Loan Classification by Branch/Company</h2><p id="odClassBranchNote">Selected reporting date by branch</p></div><span class="tag" id="odClassBranchTag">Accounts · OS</span></div>
+            <div class="table-wrap">
+              <table class="data-table compact" id="odClassBranchTable">
+                <thead><tr>
+                  <th>Branch / Company</th>
+                  <th class="num">Normal</th><th class="num">Special Mention</th><th class="num">Substandard</th><th class="num">Doubtful</th><th class="num">Loss</th>
+                  <th class="num">Total</th>
+                </tr></thead>
+                <tbody id="odClassBranchBody"></tbody>
+              </table>
+            </div>
+            <p class="note" id="odClassBranchFoot"></p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ================= DAILY CONSOLIDATE ================= -->
+      <section class="page" id="page-consolidate">
+        <header class="page-head">
+          <div>
+            <p class="overline">Daily consolidate for overdue · portfolio position</p>
+            <h1>Daily consolidate</h1>
+            <p class="page-sub" id="consSub">Loading consolidate workbooks…</p>
+          </div>
+          <div class="head-tools">
+            <label class="tool">Reporting date
+              <select id="consDate"></select>
+            </label>
+            <label class="tool">Display currency
+              <select id="consCurrency"><option value="USD" selected>USD</option><option value="KHR">KHR</option></select>
+            </label>
+            <label class="tool">Exchange rate
+              <span class="tool-inline"><input id="consRate" type="number" min="1" step="1" value="4055"><em>KHR / USD</em></span>
+            </label>
+          </div>
+        </header>
+
+        <div class="control-bar">
+          <label class="tool">Branch Code
+            <select id="consBranch"><option value="All">Branch Code: All</option></select>
+          </label>
+        </div>
+
+        <div class="kpi-grid" id="consKpis"></div>
+
+        <div class="chart-grid">
+          <article class="panel span-2">
+            <div class="panel-head"><div><h2>Daily follow-up trend</h2><p id="consTrendNote">Balance and account movement by branch</p></div><span class="tag" id="consTrendTag">Daily</span></div>
+            <div class="chart" id="consTrend"></div>
+            <div class="legend" id="consTrendLegend"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Follow-up result mix</h2><p id="consResultNote">Latest report date</p></div><span class="tag">Accounts</span></div>
+            <div id="consResults" class="donut-wrap"></div>
+          </article>
+        </div>
+
+        <div class="chart-grid">
+          <article class="panel">
+            <div class="panel-head"><div><h2>Classification × result</h2><p id="consClassNote">Latest report date</p></div><span class="tag">Cases</span></div>
+            <div class="table-wrap">
+              <table class="data-table compact" id="consClassTable"><thead></thead><tbody></tbody></table>
+            </div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Branch performance</h2><p>Accounts, outstanding and promise rate</p></div><span class="tag">Latest</span></div>
+            <div class="table-wrap">
+              <table class="data-table compact" id="consBranchTable"><thead></thead><tbody></tbody></table>
+            </div>
+          </article>
+        </div>
+
+        <section class="panel table-panel">
+          <div class="panel-head">
+            <div><h2>Follow-up register</h2><p id="consDetailNote">Selected workbook detail</p></div>
+            <input class="search" id="consSearch" type="search" placeholder="Search account, customer, RM, branch…">
+          </div>
+          <div class="table-wrap tall">
+            <table class="data-table compact" id="consTable">
+              <thead><tr>
+                <th>Account</th><th>Customer</th><th>Branch</th><th>OS · USD</th><th>Overdue · USD</th>
+                <th>Aging</th><th>Classification</th><th>Result</th><th>Promise date</th><th>RM</th><th>Next action</th>
+              </tr></thead>
+              <tbody id="consTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pager" id="consPager"></div>
+        </section>
+      </section>
+
+      <!-- ================= NPL ================= -->
+      <section class="page" id="page-npl">
+        <header class="page-head">
+          <div>
+            <p class="overline">NPL movement · monthly recovery workbooks</p>
+            <h1>NPL movement</h1>
+            <p class="page-sub" id="nplSub">Reading the NPL Ratio sheet from every Recovery workbook…</p>
+          </div>
+          <div class="head-tools">
+            <label class="tool">Reporting date
+              <select id="nplSelect"></select>
+            </label>
+            <label class="tool">Display currency
+              <select id="nplCurrency"><option value="USD" selected>USD</option><option value="KHR">KHR</option></select>
+            </label>
+            <label class="tool">Exchange rate
+              <span class="tool-inline"><input id="nplRate" type="number" min="1" step="1" value="4055"><em>KHR / USD</em></span>
+            </label>
+          </div>
+        </header>
+
+        <div class="kpi-grid" id="nplKpis"></div>
+
+        <div class="chart-grid">
+          <article class="panel span-2">
+            <div class="panel-head"><div><h2>NPL ratio</h2><p>Year-end positions and current-year reporting points</p></div><span class="tag">%</span></div>
+            <div class="chart" id="nplRatioChart"></div>
+            <div class="legend" id="nplRatioLegend"></div>
+            <div class="table-wrap small" style="margin-top:12px">
+              <table class="data-table compact" id="nplRatioTable">
+                <thead><tr>
+                  <th>Month</th><th class="num">Total account</th><th class="num">Amount of NPLs</th><th class="num">NPL ratio</th>
+                </tr></thead>
+                <tbody id="nplRatioBody"></tbody>
+              </table>
+            </div>
+            <p class="note" id="nplRatioFoot"></p>
+          </article>
+          <article class="panel span-2">
+            <div class="panel-head"><div><h2>NPL Ratio by Branch</h2><p id="nplBranchNote">Selected reporting month</p></div><span class="tag" id="nplBranchTag">Accounts · Amount</span></div>
+            <div class="table-wrap">
+              <table class="data-table compact" id="nplBranchTable">
+                <thead><tr>
+                  <th>Branch</th><th class="num">Total account</th><th class="num">Total outstanding</th><th class="num">NPL amount</th><th class="num">NPL ratio</th>
+                </tr></thead>
+                <tbody id="nplBranchBody"></tbody>
+              </table>
+            </div>
+            <p class="note" id="nplBranchFoot"></p>
+          </article>
+          <article class="panel span-2">
+            <div class="panel-head"><div><h2>Monthly NPL</h2><p>NPL amount and NPL ratio by reporting month</p></div><span class="tag" id="nplMonthlyTag">Amount · %</span></div>
+            <div class="chart" id="nplMonthlyChart"></div>
+            <div class="legend" id="nplMonthlyLegend"></div>
+          </article>
+        </div>
+
+        <section class="panel table-panel">
+          <div class="panel-head"><div><h2>Monthly NPL table</h2><p>Total accounts, NPL accounts and NPL ratio per workbook</p></div><span class="tag" id="nplTableTag">—</span></div>
+          <div class="table-wrap">
+            <table class="data-table" id="nplTable">
+              <thead><tr>
+                <th>Month</th><th>Report date</th><th class="num">Total accounts</th><th class="num">Total loan outstanding</th>
+                <th class="num">NPL accounts</th><th class="num">Total NPL amount</th><th class="num">NPL ratio</th><th>Source</th>
+              </tr></thead>
+              <tbody id="nplTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ================= MONTHLY PORTFOLIO ================= -->
+      <section class="page" id="page-monthly">
+        <header class="page-head">
+          <div>
+            <p class="overline">Monthly portfolio · portfolio movement</p>
+            <h1>Monthly Portfolio</h1>
+            <p class="page-sub">Month-by-month movement of portfolio size, NPL balance and non-performing accounts.</p>
+          </div>
+          <div class="head-tools">
+            <label class="tool">Reporting date
+              <select id="monthSelect"></select>
+            </label>
+            <label class="tool">Display currency
+              <select id="monthCurrency"><option value="USD" selected>USD</option><option value="KHR">KHR</option></select>
+            </label>
+            <label class="tool">Exchange rate
+              <span class="tool-inline"><input id="monthRate" type="number" min="1" step="1" value="4055"><em>KHR / USD</em></span>
+            </label>
+          </div>
+        </header>
+
+        <div class="kpi-grid" id="monthKpis"></div>
+
+        <div class="chart-grid">
+          <article class="panel span-2">
+            <div class="panel-head"><div><h2>Monthly NPL</h2><p>NPL amount and NPL ratio by reporting month</p></div><span class="tag" id="monthChartTag">USD M</span></div>
+            <div class="chart" id="monthChart"></div>
+            <div class="legend" id="monthChartLegend"></div>
+            <div class="table-wrap small" style="margin-top:12px">
+              <table class="data-table compact" id="monthChartTable">
+                <thead><tr>
+                  <th>Month</th><th class="num">Total account</th><th class="num">Amount of NPLs</th><th class="num">NPL ratio</th>
+                </tr></thead>
+                <tbody id="monthChartBody"></tbody>
+              </table>
+            </div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Account movement</h2><p>Total accounts versus NPL accounts</p></div><span class="tag">Count</span></div>
+            <div class="breakdown" id="monthAccounts"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h2>Portfolio movement</h2><p>Month-on-month change in total outstanding</p></div><span class="tag" id="monthMoveTag">USD M</span></div>
+            <div class="breakdown" id="monthMovement"></div>
+          </article>
+        </div>
+
+        <section class="panel table-panel">
+          <div class="panel-head"><div><h2>Monthly movement table</h2><p>All metrics captured from each monthly Recovery workbook</p></div><span class="tag" id="monthTableTag">—</span></div>
+          <div class="table-wrap">
+            <table class="data-table" id="monthTable">
+              <thead><tr>
+                <th>Month</th><th class="num">Total accounts</th><th class="num">Δ accounts</th><th class="num">Total loan outstanding</th><th class="num">Δ OS</th>
+                <th class="num">NPL accounts</th><th class="num">Δ NPL accounts</th><th class="num">NPL amount</th><th class="num">Δ NPL amount</th><th class="num">NPL ratio</th><th class="num">Δ ratio</th>
+              </tr></thead>
+              <tbody id="monthTableBody"></tbody>
+            </table>
+          </div>
+          <p class="note" id="monthNote"></p>
+        </section>
+      </section>
+
+      <!-- ================= TASKS ================= -->
+      <section class="page" id="page-tasks">
+        <header class="page-head">
+          <div>
+            <p class="overline">Recovery tasks · daily operating rhythm</p>
+            <h1>Recovery tasks</h1>
+            <p class="page-sub">Task plan from Recovery Tasks.xlsx. Completion is saved in this browser.</p>
+          </div>
+          <button class="btn ghost" id="resetTasks">Reset completion</button>
+        </header>
+
+        <div class="kpi-grid" id="taskKpis"></div>
+
+        <div class="filters">
+          <div class="segmented" id="taskFilters"></div>
+          <label class="grow">Search<input id="taskSearch" type="search" placeholder="Search task, owner or timing…"></label>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head"><div><h2>Task checklist</h2><p id="taskCount">—</p></div><span class="tag">Local progress</span></div>
+          <div class="task-list" id="taskList"></div>
+        </section>
+      </section>
+
+      <!-- ================= INTERNAL REPORT ================= -->
+      <section class="page" id="page-internal">
+        <header class="page-head">
+          <div>
+            <p class="overline">Internal report · credit department</p>
+            <h1>Internal report by month</h1>
+            <p class="page-sub" id="internalSub">Loan received, commitments, products and exposure captured from the monthly internal workbook.</p>
+          </div>
+          <div class="head-tools">
+            <label class="tool">Reporting date
+              <select id="internalSelect"></select>
+            </label>
+            <label class="tool">Display currency
+              <select id="internalCurrency"><option value="USD" selected>USD</option><option value="KHR">KHR</option></select>
+            </label>
+            <label class="tool">Exchange rate
+              <span class="tool-inline"><input id="internalRate" type="number" min="1" step="1" value="4055"><em>KHR / USD</em></span>
+            </label>
+          </div>
+        </header>
+
+        <div class="kpi-grid" id="internalKpis"></div>
+        <div id="internalSections"></div>
+      </section>
+
+      <!-- ================= LIBRARY ================= -->
+      <section class="page" id="page-library">
+        <header class="page-head">
+          <div>
+            <p class="overline">Credit recovery workflow · reference library</p>
+            <h1>SOP &amp; recovery forms</h1>
+            <p class="page-sub">Open the source documents directly from this workspace.</p>
+          </div>
+          <span class="tag strong">Local folder attachments</span>
+        </header>
+
+        <div class="link-grid">
+          <article class="link-panel">
+            <h2>Credit Recovery SOP by year</h2>
+            <p>Procedure documents from the Credit Recovery SOP folder.</p>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Credit%20Recovery%20SOP/2023%20Procedure%20on%20Loan%20Recovery.pdf"><span class="file-type">PDF</span>2023 Procedure on Loan Recovery.pdf<small>2023</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Credit%20Recovery%20SOP/2024%20Recover%20SOP.pdf"><span class="file-type">PDF</span>2024 Recover SOP.pdf<small>2024</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Credit%20Recovery%20SOP/2025%20Recover%20SOP.pdf"><span class="file-type">PDF</span>2025 Recover SOP.pdf<small>2025</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Credit%20Recovery%20SOP/2026%20Recover%20SOP.pdf"><span class="file-type">PDF</span>2026 Recover SOP.pdf<small>2026</small></a>
+          </article>
+          <article class="link-panel">
+            <h2>Loan Recovery Forms</h2>
+            <p>Forms, letters and monitoring templates. Supporting borrower documents are not listed here.</p>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Loan%20Recovery%20Form/2.%20Request%20Restructuring%20loan%20Form/Restructure-Request-Form.docx"><span class="file-type doc">DOC</span>Restructure Request Form<small>DOCX</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Loan%20Recovery%20Form/2.%20Request%20Restructuring%20loan%20Form/Borrower%20Consent%20%20-%20Individual-CGCC%201.docx"><span class="file-type doc">DOC</span>Borrower Consent · Individual<small>DOCX</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Loan%20Recovery%20Form/2.%20Request%20Restructuring%20loan%20Form/Credit%20Reporting%20Consent%20-%20Individual-CGCC%201.docx"><span class="file-type doc">DOC</span>Credit Reporting Consent<small>DOCX</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Loan%20Recovery%20Form/2.%20Request%20Restructuring%20loan%20Form/Reschedule%20Calculation.xlsx"><span class="file-type xls">XLS</span>Reschedule Calculation<small>XLSX</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Loan%20Recovery%20Form/3.%20Reminding%20Letters/Letter%20of%20Reminder%201.docx"><span class="file-type doc">DOC</span>Reminder Letter 1<small>DOCX</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Loan%20Recovery%20Form/3.%20Reminding%20Letters/Letter%20of%20Reminder%202.docx"><span class="file-type doc">DOC</span>Reminder Letter 2<small>DOCX</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Loan%20Recovery%20Form/3.%20Reminding%20Letters/Letter%20of%20Reminder%203.docx"><span class="file-type doc">DOC</span>Reminder Letter 3<small>DOCX</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Loan%20Recovery%20Form/4.%20Monitoring%20Report/Appendix%203.%20Format%20Loan%20Monitoring%20Report%20(Individual).docx"><span class="file-type doc">DOC</span>Loan Monitoring Report · Individual<small>DOCX</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Loan%20Recovery%20Form/5.%20Call%20Report/Appendix5.%20Call%20Report.docx"><span class="file-type doc">DOC</span>Call Report<small>DOCX</small></a>
+            <a class="file-link" target="_blank" href="Credit%20Recovery%20Workflow/Loan%20Recovery%20Form/6.%20Memo%20and%20Check%20List%20for%20Transferring/Appendix%204.%20Memo%20and%20Check%20List%20for%20Borrower%20Transfer%20to%20Recovery.xlsx"><span class="file-type xls">XLS</span>Memo &amp; Checklist · Transfer to Recovery<small>XLSX</small></a>
+          </article>
+        </div>
+        <p class="note">Documents open in a new tab. If the browser blocks local files, open them directly from the <b>Credit Recovery Workflow</b> folder.</p>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <span id="footerSource">Credit Recovery · local workspace</span>
+      <span id="footerStamp">—</span>
+    </footer>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
